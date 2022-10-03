@@ -1,29 +1,17 @@
-name = "workers-graphql-server"
-type = "webpack"
-
-account_id = ""
-zone_id = ""
-route = ""
+name = "worker-apollo-server"
+main = "build/index.js"
 
 workers_dev = true
-webpack_config = "webpack.config.js"
-compatibility_date = "2021-10-03"
+kv_namespaces = [
+  { binding = "GRAPHQL_CACHE", id = "dbdc624f2c684f1bb88fa38ab249a13e" }
+]
 
-# Enable a kv-namespace to use the KV caching feature
-#
-# kv-namespaces = [
-#   { binding = "WORKERS_GRAPHQL_CACHE", id = "" }
-# ]
+compatibility_date = "2022-09-29"
 
 [build]
-command = "npm install && npm run build"
+command = "npm run generate && npm run build"
 
-[build.upload]
-format = "modules"
-main = "./src/index.js"
-
-[dev]
-ip = "0.0.0.0"
-port = 8787
-local_protocol="http"
-upstream_protocol="https"
+[vars]
+GRAPHQL_BASE_ENDPOINT = "/"
+GRAPHQL_PLAYGROUND_ENDPOINT = "/playground"
+GRAPHQL_KV_CACHE = "true"

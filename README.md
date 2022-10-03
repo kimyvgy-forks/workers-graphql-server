@@ -1,98 +1,93 @@
-# workers-graphql-server
+# 👷 `worker-apollo-server` Quick start
 
-An [Apollo GraphQL](https://www.apollographql.com/) server, built with [Cloudflare Workers](https://workers.cloudflare.com). [Try a demo by looking at a deployed GraphQL playground](https://graphql-on-workers.signalnerve.com/___graphql).
+A template for kick starting a Cloudflare worker project to deploy Apollo GraphQL Server to Cloudflare Worker.
 
-Why this rules: Cloudflare Workers is a serverless application platform for deploying your projects across Cloudflare's massive distributed network. Deploying your GraphQL application to the edge is a huge opportunity to build consistent low-latency API servers, with the added benefits of "serverless" (I know, the project has `server` in it): usage-based pricing, no cold starts, and instant, easy-to-use deployment software, using [Wrangler](https://github.com/cloudflare/wrangler).
+[`index.ts`](blob/main/src/index.ts) is the content of the Workers script.
 
-By the way - as a full-stack developer who _loves_ GraphQL, and the developer advocate for Cloudflare Workers, I would love to see what you build with this! Let me know [on Twitter](https://twitter.com/signalnerve)!
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/workers-graphql-server)
+- [`handlers/apollo.ts`](blob/main/src/handlers/apollo.ts): Route handler for GraphQL query request
+- [`handlers/playground.ts`](blob/main/src/handlers/playground.ts): Route handler for GraphQL Playground
 
 ## Usage
 
-You can begin building your own Workers GraphQL server by [installing Wrangler](https://workers.cloudflare.com/docs/quickstart/), the Workers command-line tool, and generating a new project:
+Click [Use this template](https://github.com/kimyvgy/worker-apollo-server/generate) button to create your own repository.
 
-```sh
-wrangler generate my-graphql-server https://github.com/cloudflare/workers-graphql-server
-```
+This template uses `graphql-codegen` to auto-generate Typescript types from `schema.graphql`. The types are generated to file `src/@types/schema.generated.ts`. So you can import Resolver Types from there.
 
-You'll need to configure your project's `wrangler.toml` file to prepare your project for deployment. See the ["Configuration"](https://developers.cloudflare.com/workers/cli-wrangler/configuration/) docs for a guide on how to do this. Note that you'll need to [find your Cloudflare API keys](https://developers.cloudflare.com/workers/cli-wrangler/authentication/) to set up your config file.
+Enjoin!
 
-The source for this project includes an example external REST data source, and defined types for the [PokeAPI](https://pokeapi.co/), as an example of how to integrate external APIs. Once you have the worker available, try this query as a sanity check:
+## Examples
+
+Live: https://worker-apollo-server.webee-asia.workers.dev/playground
 
 ```graphql
-query samplePokeAPIquery {
-  pokemon: pokemon(id:1) {
-    id,
-    name,
-    height,
-    weight,
-    sprites{
-      front_shiny,
-      back_shiny
+query Example($id: ID!) {
+  example
+  pokemon(id: $id) {
+    id
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "example": "Hello world!",
+    "pokemon": {
+      "id": "1"
     }
   }
 }
 ```
 
-To start using the project, configure your `graphQLOptions` object in `src/index.js`:
+## Development
 
-```js
-const graphQLOptions = {
-  baseEndpoint: '/', // String
-  playgroundEndpoint: '/___graphql', // ?String
-  forwardUnmatchedRequestsToOrigin: false, // Boolean
-  debug: false, // Boolean
-  cors: true, // Boolean or Object to further configure
-  kvCache: false, // Boolean
-}
+Start your dev server with following commands:
+
+```sh
+yarn install
+yarn dev
 ```
 
-### Endpoints
+Open up [http://0.0.0.0:8787](http://0.0.0.0:8787) and you should be ready to go!
 
-Make requests to your GraphQL server at the `baseEndpoint` (e.g. `graphql-on-workers.signalnerve.com/`) and, if configured, try GraphQL queries at the `playgroundEndpoint` (e.g. `graphql-on-workers.signalnerve.com/___graphql`).
+## Deployment
 
-### Origin forwarding
+If you don't already have an account, then [create a cloudflare account here](https://dash.cloudflare.com/sign-up) and after verifying your email address with Cloudflare, go to your dashboard and set up your free custom Cloudflare Workers subdomain.
 
-If you run your GraphQL server on a domain already registered with Cloudflare, you may want to pass any unmatched requests from inside your Workers script to your origin: in that case, set `forwardUnmatchedRequestToOrigin` to true (if you're running a GraphQL server on a [Workers.dev](https://workers.dev) subdomain, the default of `false` is fine).
+Once that's done, you should be able to deploy your app:
 
-### Debugging
-
-While configuring your server, you may want to set the `debug` flag to `true`, to return script errors in your browser. This can be useful for debugging any errors while setting up your GraphQL server, but should be disabled on a production server.
-
-### CORS
-
-By default, the `cors` option allows cross-origin requests to the server from any origin. You may wish to configure it to whitelist specific origins, methods, or headers. To do this, change the `cors` option to an object:
-
-```js
-const graphQLOptions = {
-  // ... other options ...
-
-  cors: {
-    allowCredentials: 'true',
-    allowHeaders: 'Content-type',
-    allowOrigin: '*',
-    allowMethods: 'GET, POST, PUT',
-  },
-}
+```sh
+yarn deploy
 ```
 
-Note that by default, any field that you _don't_ pass here (e.g. `allowMethods`) will fallback to the default value. See `utils/setCors.js` for the default values for these fields.
+```bash
+yarn run v1.22.19
+$ wrangler publish
+ ⛅️ wrangler 2.1.9
+-------------------
+Running custom build: npm run generate && npm run build
 
-### REST caching
+> generate
+> graphql-codegen --config codegen.yml
 
-Version 1.1.0 of this project includes support for caching external requests made via instances of [`RESTDataSource`](https://www.apollographql.com/docs/apollo-server/features/data-sources/), using KV. To use caching in your project, [create a new KV namespace](https://workers.cloudflare.com/docs/reference/storage/writing-data), and in `wrangler.toml`, configure your namespace, calling it `WORKERS_GRAPHQL_CACHE`:
+✔ Parse Configuration
+✔ Generate outputs
 
-```toml
-# wrangler.toml
+> build
+> NODE_ENV=production node worker.build.js
 
-[[kv-namespaces]]
-binding = "WORKERS_GRAPHQL_CACHE"
-id = "$myId"
+Your worker has access to the following bindings:
+- KV Namespaces:
+  - GRAPHQL_CACHE: dbdc624f2c684f1bb88fa38ab249a13e
+- Vars:
+  - GRAPHQL_BASE_ENDPOINT: "/"
+  - GRAPHQL_PLAYGROUND_ENDPOINT: "/playground"
+  - GRAPHQL_KV_CACHE: "true"
+Total Upload: 1520.16 KiB / gzip: 285.68 KiB
+Uploaded worker-apollo-server (2.71 sec)
+Published worker-apollo-server (0.28 sec)
+  https://worker-apollo-server.webee-asia.workers.dev
+Done in 7.29s.
 ```
-
-With a configured KV namespace set up, you can opt-in to KV caching by changing the `kvCache` config value in `graphQLOptions` (in `index.js`) to `true`.
-
-## License
-
-This project is licensed with the [MIT License](https://github.com/cloudflare/workers-graphql-server/blob/master/LICENSE).

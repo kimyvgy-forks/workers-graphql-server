@@ -1,4 +1,4 @@
-const html = (baseEndpoint) => `
+const html = (baseEndpoint: string) => `
 <!DOCTYPE html>
 <html>
   <head>
@@ -492,7 +492,7 @@ const html = (baseEndpoint) => `
 `
 
 const headers = { 'Content-Type': 'text/html' }
-const handler = (request, { baseEndpoint }) =>
+const handler = (_request: Request, baseEndpoint: string) =>
   new Response(html(baseEndpoint), { headers })
 
-module.exports = handler
+export default handler;
